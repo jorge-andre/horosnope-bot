@@ -8,7 +8,7 @@ import twitter4j.TwitterFactory;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.util.Random;
 
 public class TwitterAutoBot {
 
@@ -26,7 +26,10 @@ public class TwitterAutoBot {
             //isr = new InputStreamReader(fis, Charset.forName("Cp1252"));
             //br = new BufferedReader(isr);
 
-            URL url = new URL("http://ohmanda.com/api/horoscope/aquarius");
+            Random random = new Random();
+            String randomSign = Signs.values()[random.nextInt(Signs.values().length)].label();
+
+            URL url = new URL("http://ohmanda.com/api/horoscope/" + randomSign);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Content-Type", "application/json");
@@ -35,17 +38,27 @@ public class TwitterAutoBot {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode json = objectMapper.readTree(in);
-
-            System.out.println(json.get("horoscope").asText());
             in.close();
 
-            Status firstTweet = sendTweet("test boop");
-            Thread.sleep(10000);
+            String fullHoroscope = json.get("horoscope").asText();
 
-            if (firstTweet != null) {
-                String tweetUrl = "https://twitter.com/" + firstTweet.getUser().getScreenName() + "/status/" + firstTweet.getId();
-                sendTweet("beep retweet test " + tweetUrl);
+            String[] splitHoroscope = fullHoroscope.split("\\.");
+            StringBuilder newHoroscope = new StringBuilder();
+
+            for (String sentence : splitHoroscope) {
+                if (newHoroscope.length() + sentence.length() < 279) {
+                    newHoroscope.append(sentence);
+                    newHoroscope.append(".");
+                }
             }
+
+            Status firstTweet = sendTweet(newHoroscope.toString());
+//            Thread.sleep(10000);
+//
+//            if (firstTweet != null) {
+//                String tweetUrl = "https://twitter.com/" + firstTweet.getUser().getScreenName() + "/status/" + firstTweet.getId();
+//                sendTweet("beep retweet test " + tweetUrl);
+//            }
 
         } catch (Exception e) {
             e.printStackTrace();
