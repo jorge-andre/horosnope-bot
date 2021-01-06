@@ -8,51 +8,36 @@ import twitter4j.TwitterFactory;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class TwitterAutoBot {
+
+    private static final int CHARACTER_LIMIT = 280;
+    private static final Random RANDOM = new Random();
+    private static List<Signs> SIGNS = Arrays.asList(Signs.values());
 
     public static void main(String[] args) {
         tweetLines();
     }
 
     private static void tweetLines() {
-        String line;
-        InputStream fis;
-        InputStreamReader isr;
-        BufferedReader br;
         try {
-            //fis = new FileInputStream("filepath");
-            //isr = new InputStreamReader(fis, Charset.forName("Cp1252"));
-            //br = new BufferedReader(isr);
 
-            Random random = new Random();
-            String randomSign = Signs.values()[random.nextInt(Signs.values().length)].label();
+            Collections.shuffle(SIGNS);
+            List<String> signsPool = SIGNS
+                    .stream()
+                    .limit(4)
+                    .map(Signs::label)
+                    .collect(Collectors.toList());
 
-            URL url = new URL("http://ohmanda.com/api/horoscope/" + randomSign);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Content-Type", "application/json");
+            String horoscope = requestHoroscope(signsPool.get(0));
 
-            InputStreamReader in = new InputStreamReader(connection.getInputStream());
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode json = objectMapper.readTree(in);
-            in.close();
-
-            String fullHoroscope = json.get("horoscope").asText();
-
-            String[] splitHoroscope = fullHoroscope.split("\\.");
-            StringBuilder newHoroscope = new StringBuilder();
-
-            for (String sentence : splitHoroscope) {
-                if (newHoroscope.length() + sentence.length() < 279) {
-                    newHoroscope.append(sentence);
-                    newHoroscope.append(".");
-                }
-            }
-
-            Status firstTweet = sendTweet(newHoroscope.toString());
+            Status firstTweet = sendTweet(horoscope);
+            System.out.println(firstTweet);
 //            Thread.sleep(10000);
 //
 //            if (firstTweet != null) {
@@ -66,17 +51,34 @@ public class TwitterAutoBot {
 
     }
 
-    private static Status sendTweet(String line) {
-        Twitter twitter = TwitterFactory.getSingleton();
-        Status status;
-        try {
-            status = twitter.updateStatus(line);
-            System.out.println(status);
-            return status;
-        } catch (TwitterException e) {
-            e.printStackTrace();
-            return null;
+    private static Status sendTweet(String line) throws TwitterException {
+        return TwitterFactory.getSingleton().updateStatus(line);
+    }
+
+    private static String requestHoroscope(String sign) throws IOException {
+        URL url = new URL("http://ohmanda.com/api/horoscope/" + sign);
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Content-Type", "application/json");
+
+        InputStreamReader in = new InputStreamReader(connection.getInputStream());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode json = objectMapper.readTree(in);
+        in.close();
+
+        String[] splitHoroscope = json.get("horoscope").asText().split("\\.");
+        StringBuilder newHoroscope = new StringBuilder();
+
+        for (String sentence : splitHoroscope) {
+            if (newHoroscope.length() + sentence.length() < CHARACTER_LIMIT - 1) {
+                newHoroscope.append(sentence);
+                newHoroscope.append(".");
+            }
         }
+
+        return newHoroscope.toString();
     }
 
 }
