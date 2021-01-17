@@ -19,6 +19,7 @@ public class TwitterAutoBot {
     private static final int CHARACTER_LIMIT = 280;
     private static final Random RANDOM = new Random();
     private static List<Signs> SIGNS = Arrays.asList(Signs.values());
+    private static final int HOUR = 1000 * 60 * 60; //1000ms * 60seconds * 60minutes
 
     public static void main(String[] args) {
         tweetLines();
@@ -28,6 +29,7 @@ public class TwitterAutoBot {
         try {
 
             Collections.shuffle(SIGNS);
+            //Will be used in the future when there's polls. Currently no use for this
             List<String> signsPool = SIGNS
                     .stream()
                     .limit(4)
@@ -38,12 +40,13 @@ public class TwitterAutoBot {
 
             Status firstTweet = sendTweet(horoscope);
             System.out.println(firstTweet);
-//            Thread.sleep(10000);
-//
-//            if (firstTweet != null) {
-//                String tweetUrl = "https://twitter.com/" + firstTweet.getUser().getScreenName() + "/status/" + firstTweet.getId();
-//                sendTweet("beep retweet test " + tweetUrl);
-//            }
+            Thread.sleep(4 * HOUR);
+
+            if (firstTweet != null) {
+                String tweetUrl = "https://twitter.com/" + firstTweet.getUser().getScreenName() + "/status/" + firstTweet.getId();
+                sendTweet("Todays horoscope was: " + horoscope + "! How close was it to your day? Did you get it right?" + tweetUrl);
+            }
+            Thread.sleep(20 * HOUR);
 
         } catch (Exception e) {
             e.printStackTrace();
