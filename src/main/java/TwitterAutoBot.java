@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 public class TwitterAutoBot {
 
     private static final int CHARACTER_LIMIT = 280;
-    private static final Random RANDOM = new Random();
     private static List<Signs> SIGNS = Arrays.asList(Signs.values());
     private static final int HOUR = 1000 * 60 * 60; //1000ms * 60seconds * 60minutes
 
@@ -44,7 +43,7 @@ public class TwitterAutoBot {
 
             if (firstTweet != null) {
                 String tweetUrl = "https://twitter.com/" + firstTweet.getUser().getScreenName() + "/status/" + firstTweet.getId();
-                sendTweet("Todays horoscope was: " + horoscope + "! How close was it to your day? Did you get it right?" + tweetUrl);
+                sendTweet("Today's horoscope was: " + horoscope + "! How close was it to your day? Did you get it right?" + tweetUrl);
             }
             Thread.sleep(20 * HOUR);
 
